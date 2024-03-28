@@ -69,3 +69,47 @@ func GetAllPostsOverview(dynamodbClient dynamodbiface.DynamoDBAPI, tableName str
 
 	return posts, nil
 }
+
+// GetPostById retrieves a post from the DynamoDB table by ID.
+func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string) (*Post, error) {
+	input := &dynamodb.GetItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(id),
+			},
+		},
+	}
+
+	result, err := dynamodbClient.GetItem(input)
+	if err != nil {
+		return nil, err
+	}
+
+	post := Post{}
+	err = dynamodbattribute.UnmarshalMap(result.Item, &post)
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+}
+
+// DeletePost deletes a post from the DynamoDB table by ID.
+func DeletePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string) error {
+	input := &dynamodb.DeleteItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"id": {
+				S: aws.String(id),
+			},
+		},
+	}
+
+	_, err := dynamodbClient.DeleteItem(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

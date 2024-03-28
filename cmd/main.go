@@ -33,7 +33,13 @@ func main() {
 func handler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":
-		return handlers.GetAllPostsOverview(req, tableName, dynamodbClient)
+		if (req.PathParameters["id"] != "") {
+			return handlers.GetPostById(req, tableName, dynamodbClient)
+		} else {
+			return handlers.GetAllPostsOverview(req, tableName, dynamodbClient)
+		}
+	case "DELETE":
+		return handlers.DeletePost(req, tableName, dynamodbClient)
 	default:
 		return handlers.UnhandledMethod()
 	}

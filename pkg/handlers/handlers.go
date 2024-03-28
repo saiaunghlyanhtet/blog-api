@@ -25,6 +25,32 @@ func GetAllPostsOverview(req events.APIGatewayProxyRequest, tableName string, dy
 	return apiResponse(http.StatusOK, result)
 }
 
+func GetPostById(req events.APIGatewayProxyRequest, tableName string, dynamoDBClient dynamodbiface.DynamoDBAPI) (*events.APIGatewayProxyResponse, error) {
+	id := req.PathParameters["id"]
+	result, err := post.GetPostById(dynamoDBClient, tableName, id)
+
+	if err != nil {
+		return apiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
+	}
+
+	return apiResponse(http.StatusOK, result)
+}
+
+func DeletePost(req events.APIGatewayProxyRequest, tableName string, dynamoDBClient dynamodbiface.DynamoDBAPI) (*events.APIGatewayProxyResponse, error) {
+	id := req.PathParameters["id"]
+	err := post.DeletePost(dynamoDBClient, tableName, id)
+
+	if err != nil {
+		return apiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
+	}
+
+	return apiResponse(http.StatusOK, "Delete the post with ID: "+ id)
+}
+
 func UnhandledMethod() (*events.APIGatewayProxyResponse, error) {
 	return apiResponse(http.StatusMethodNotAllowed, "Method Not Allowed.")
 }
