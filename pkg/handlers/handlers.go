@@ -13,6 +13,19 @@ type ErrorBody struct {
 	ErrorMsg *string `json:"error,omitempty"`
 }
 
+func CreatePost(req events.APIGatewayProxyRequest, tableName string, dynamoDBClient dynamodbiface.DynamoDBAPI) (*events.APIGatewayProxyResponse, error) {
+
+	err := post.CreatePost(dynamoDBClient, tableName, req)
+
+	if err != nil {
+		return apiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
+	}
+
+	return apiResponse(http.StatusCreated, "Post created successfully.")
+}
+
 func GetAllPostsOverview(req events.APIGatewayProxyRequest, tableName string, dynamoDBClient dynamodbiface.DynamoDBAPI) (*events.APIGatewayProxyResponse, error) {
 	result, err := post.GetAllPostsOverview(dynamoDBClient, tableName)
 
@@ -48,7 +61,7 @@ func DeletePost(req events.APIGatewayProxyRequest, tableName string, dynamoDBCli
 		})
 	}
 
-	return apiResponse(http.StatusOK, "Delete the post with ID: "+ id)
+	return apiResponse(http.StatusOK, "Delete the post with ID: "+id)
 }
 
 func UnhandledMethod() (*events.APIGatewayProxyResponse, error) {

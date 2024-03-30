@@ -1,10 +1,16 @@
 package post
 
 import (
+	"time"
+
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/google/uuid"
 )
 
 type Post struct {
@@ -17,8 +23,18 @@ type Post struct {
 	Tags    []string `json:"tags"`
 }
 
-// CreatePost creates a new post in the DynamoDB table and puts the image to S3 bucket while keeping image names in Images field.
-func CreatePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName string, post Post) error {
+// CreatePost creates a new post in the DynamoDB table.
+func CreatePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName string, req events.APIGatewayProxyRequest) error {
+	var post Post
+	id := uuid.New().String()
+	post.ID = id
+	post.Author = req.QueryStringParameters["author"]
+	post.Title = req.QueryStringParameters["title"]
+	post.Summary = req.QueryStringParameters["summary"]
+	post.Content = req.QueryStringParameters["content"]
+	post.Images = []string{req.QueryStringParameters["images"]}
+	post.Tags = []string{req.QueryStringParameters["tags"]}
+
 	item, err := dynamodbattribute.MarshalMap(post)
 	if err != nil {
 		return err
@@ -71,6 +87,16 @@ func GetAllPostsOverview(dynamodbClient dynamodbiface.DynamoDBAPI, tableName str
 }
 
 // GetPostById retrieves a post from the DynamoDB table by ID.
+var (
+	s3Session  *session.Session
+	bucketName string
+)
+
+func InitializeS3SessionAndBucket(session *session.Session, name string) {
+	s3Session = session
+	bucketName = name
+}
+
 func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string) (*Post, error) {
 	input := &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
@@ -92,7 +118,32 @@ func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string)
 		return nil, err
 	}
 
+	for i, imageName := range post.Images {
+		url, err := generatePresignedURL(imageName)
+		if err != nil {
+			return nil, err
+		}
+		post.Images[i] = url
+	}
+
 	return &post, nil
+}
+
+func generatePresignedURL(key string) (string, error) {
+	s3Client := s3.New(s3Session)
+	expiration := 15 * time.Minute
+
+	req, _ := s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(key),
+	})
+
+	url, err := req.Presign(expiration)
+	if err != nil {
+		return "", err
+	}
+
+	return url, nil
 }
 
 // DeletePost deletes a post from the DynamoDB table by ID.

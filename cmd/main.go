@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/saiaunghlyanhtet/blog-api/pkg/handlers"
+	"github.com/saiaunghlyanhtet/blog-api/pkg/post"
 )
 
 var dynamodbClient dynamodbiface.DynamoDBAPI
@@ -27,17 +28,20 @@ func main() {
 	}
 
 	dynamodbClient = dynamodb.New(awsSession)
+	post.InitializeS3SessionAndBucket(awsSession, "blog-api-s3-bucket")
 	lambda.Start(handler)
 }
 
 func handler(req events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	switch req.HTTPMethod {
 	case "GET":
-		if (req.PathParameters["id"] != "") {
+		if req.PathParameters["id"] != "" {
 			return handlers.GetPostById(req, tableName, dynamodbClient)
 		} else {
 			return handlers.GetAllPostsOverview(req, tableName, dynamodbClient)
 		}
+	case "POST":
+		return handlers.CreatePost(req, tableName, dynamodbClient)
 	case "DELETE":
 		return handlers.DeletePost(req, tableName, dynamodbClient)
 	default:
