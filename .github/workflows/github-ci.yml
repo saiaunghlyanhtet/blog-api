@@ -1,0 +1,59 @@
+name: Build and Deploy Lambda Function
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Go Binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+
+      - name: Build Go binary
+        run: go build -o app ./cmd/main.go
+
+      - name: Zip binary
+        run: zip app.zip app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: ./app.zip
+
+  deploy:
+    name: Deploy to AWS Lambda
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: app
+          path: .
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Deploy to Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name blog-api-lambda \
+            --zip-file fileb://app.zip \
+            --region ap-northeast-1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

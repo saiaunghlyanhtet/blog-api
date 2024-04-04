@@ -14,13 +14,14 @@ import (
 )
 
 type Post struct {
-	ID      string   `json:"id"`
-	Title   string   `json:"title"`
-	Author  string   `json:"author"`
-	Summary string   `json:"summary"`
-	Content string   `json:"content"`
-	Images  []string `json:"images"`
-	Tags    []string `json:"tags"`
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Author      string   `json:"author"`
+	Summary     string   `json:"summary"`
+	Content     string   `json:"content"`
+	Images      []string `json:"images"`
+	Tags        []string `json:"tags"`
+	CreatedDate string   `json:"createdDate"`
 }
 
 // CreatePost creates a new post in the DynamoDB table.
@@ -34,6 +35,7 @@ func CreatePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName string, req 
 	post.Content = req.QueryStringParameters["content"]
 	post.Images = []string{req.QueryStringParameters["images"]}
 	post.Tags = []string{req.QueryStringParameters["tags"]}
+	post.CreatedDate = req.QueryStringParameters["createdDate"]
 
 	item, err := dynamodbattribute.MarshalMap(post)
 	if err != nil {
