@@ -26,7 +26,7 @@ jobs:
         run: mkdir temp
 
       - name: Copy files to temporary directory
-        run: cp -r * temp/
+        run: cp -r !(temp) temp/
 
       - name: Zip binary
         run: zip -r app.zip temp/
