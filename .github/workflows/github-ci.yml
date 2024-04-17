@@ -22,14 +22,11 @@ jobs:
       - name: Build Go binary
         run: go build -o app ./cmd/main.go
 
-      - name: Create temporary directory
-        run: mkdir temp
+      - name: Ensure required Lambda dependencies
+        run: go mod vendor
 
-      - name: Copy files to temporary directory
-        run: find . -maxdepth 1 -mindepth 1 -not -name 'temp' -exec cp -r {} temp/
-
-      - name: Zip binary
-        run: zip -r app.zip temp/
+      - name: Zip binary with dependencies
+        run: zip -r app.zip app vendor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
