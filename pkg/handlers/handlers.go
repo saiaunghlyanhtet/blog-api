@@ -40,7 +40,8 @@ func GetAllPostsOverview(req events.APIGatewayProxyRequest, tableName string, dy
 
 func GetPostById(req events.APIGatewayProxyRequest, tableName string, dynamoDBClient dynamodbiface.DynamoDBAPI) (*events.APIGatewayProxyResponse, error) {
 	id := req.PathParameters["id"]
-	result, err := post.GetPostById(dynamoDBClient, tableName, id)
+	createdDate := req.QueryStringParameters["createdDate"]
+	result, err := post.GetPostById(dynamoDBClient, tableName, id, createdDate)
 
 	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{

@@ -101,12 +101,15 @@ func InitializeS3SessionAndBucket(session *session.Session, name string) {
 	bucketName = name
 }
 
-func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string) (*Post, error) {
+func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string, createdDate string) (*Post, error) {
 	input := &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
 				S: aws.String(id),
+			},
+			"createdDate": {
+				S: aws.String(createdDate),
 			},
 		},
 	}
