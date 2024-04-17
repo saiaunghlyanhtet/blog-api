@@ -1,6 +1,7 @@
 package post
 
 import (
+	"log"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -26,6 +27,7 @@ type Post struct {
 
 // CreatePost creates a new post in the DynamoDB table.
 func CreatePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName string, req events.APIGatewayProxyRequest) error {
+	log.Println("QueryParameters ", req.QueryStringParameters)
 	var post Post
 	id := uuid.New().String()
 	post.ID = id
