@@ -1,6 +1,7 @@
 package post
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
@@ -27,28 +28,32 @@ type Post struct {
 
 // CreatePost creates a new post in the DynamoDB table.
 func CreatePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName string, req events.APIGatewayProxyRequest) error {
-	log.Println("QueryParameters ", req.QueryStringParameters)
+	// Log the request body
+	log.Println("RequestBody: ", req.Body)
+
+	// Parse the request body
 	var post Post
+	if err := json.Unmarshal([]byte(req.Body), &post); err != nil {
+		return err
+	}
+
+	// Generate a new UUID for the post ID
 	id := uuid.New().String()
 	post.ID = id
-	post.Author = req.QueryStringParameters["author"]
-	post.Title = req.QueryStringParameters["title"]
-	post.Summary = req.QueryStringParameters["summary"]
-	post.Content = req.QueryStringParameters["content"]
-	post.Images = []string{req.QueryStringParameters["images"]}
-	post.Tags = []string{req.QueryStringParameters["tags"]}
-	post.CreatedDate = req.QueryStringParameters["createdDate"]
 
+	// Marshal the post into a DynamoDB map
 	item, err := dynamodbattribute.MarshalMap(post)
 	if err != nil {
 		return err
 	}
 
+	// Prepare the DynamoDB PutItem input
 	input := &dynamodb.PutItemInput{
 		Item:      item,
 		TableName: aws.String(tableName),
 	}
 
+	// Put the item into DynamoDB
 	_, err = dynamodbClient.PutItem(input)
 	if err != nil {
 		return err
