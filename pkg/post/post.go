@@ -70,12 +70,11 @@ func GetAllPostsOverview(dynamodbClient dynamodbiface.DynamoDBAPI, tableName str
 		TableName:            aws.String(tableName),
 		ProjectionExpression: aws.String("#id, #title, #author, #summary, #tags"),
 		ExpressionAttributeNames: map[string]*string{
-			"#id":          aws.String("id"),
-			"#title":       aws.String("title"),
-			"#author":      aws.String("author"),
-			"#summary":     aws.String("summary"),
-			"#tags":        aws.String("tags"),
-			"#createdDate": aws.String("createdDate"),
+			"#id":      aws.String("id"),
+			"#title":   aws.String("title"),
+			"#author":  aws.String("author"),
+			"#summary": aws.String("summary"),
+			"#tags":    aws.String("tags"),
 		},
 	}
 
