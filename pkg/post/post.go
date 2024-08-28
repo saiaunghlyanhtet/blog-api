@@ -39,6 +39,8 @@ func CreatePost(dynamodbClient dynamodbiface.DynamoDBAPI, tableName string, req 
 
 	// Generate a new UUID for the post ID
 	id := uuid.New().String()
+	createdDate := time.Now().Format("2006-01-02")
+	post.CreatedDate = createdDate
 	post.ID = id
 
 	// Marshal the post into a DynamoDB map
@@ -68,11 +70,12 @@ func GetAllPostsOverview(dynamodbClient dynamodbiface.DynamoDBAPI, tableName str
 		TableName:            aws.String(tableName),
 		ProjectionExpression: aws.String("#id, #title, #author, #summary, #tags"),
 		ExpressionAttributeNames: map[string]*string{
-			"#id":      aws.String("id"),
-			"#title":   aws.String("title"),
-			"#author":  aws.String("author"),
-			"#summary": aws.String("summary"),
-			"#tags":    aws.String("tags"),
+			"#id":          aws.String("id"),
+			"#title":       aws.String("title"),
+			"#author":      aws.String("author"),
+			"#summary":     aws.String("summary"),
+			"#tags":        aws.String("tags"),
+			"#createdDate": aws.String("createdDate"),
 		},
 	}
 
@@ -106,15 +109,12 @@ func InitializeS3SessionAndBucket(session *session.Session, name string) {
 	bucketName = name
 }
 
-func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string, createdDate string) (*Post, error) {
+func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string) (*Post, error) {
 	input := &dynamodb.GetItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]*dynamodb.AttributeValue{
 			"id": {
 				S: aws.String(id),
-			},
-			"createdDate": {
-				S: aws.String(createdDate),
 			},
 		},
 	}
