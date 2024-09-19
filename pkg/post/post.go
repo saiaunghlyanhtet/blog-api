@@ -142,7 +142,7 @@ func GetPostById(dynamodbClient dynamodbiface.DynamoDBAPI, tableName, id string)
 
 func generatePresignedURL(key string) (string, error) {
 	s3Client := s3.New(s3Session)
-	expiration := 15 * time.Minute
+	expiration := 72 * time.Hour
 
 	req, _ := s3Client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
